@@ -1,27 +1,100 @@
 import { selectBudgetoption, selectTravelersList } from '@/constant/option';
-import React from 'react';
-import ReactGoogleAutocomplete from 'react-google-autocomplete';
+import {React,useState} from 'react';
+
 
 function Createtrip() {
+  const [destination, setDestination] = useState('');
+    const [suggestions, setSuggestions] = useState([]);
+    const [apiKey] = useState('YOURAPIKEY'); // Store your API key
+    const [isFetching, setIsFetching] = useState(false);
+    const [lastInputLength, setLastInputLength] = useState(0);
+
+  const fetchSuggestions = async (query) => {
+    const endpoint = 'https://google-map-places.p.rapidapi.com/maps/api/place/autocomplete/json';
+    const url = `${endpoint}?input=${query}&language=en`; // Input and language parameters as per the API documentation
+    const options = {
+      method: 'GET',
+      headers: {
+        'X-RapidAPI-Host': 'google-map-places.p.rapidapi.com',
+        'X-RapidAPI-Key': apiKey,
+      },
+    };
+
+    try {
+      setIsFetching(true); // Set loading state
+      const response = await fetch(url, options);
+      const data = await response.json();
+      
+      // Clear previous suggestions
+      setSuggestions([]);
+
+      if (data.predictions && data.predictions.length > 0) {
+        setSuggestions(data.predictions); // Use the predictions array for suggestions
+      } else {
+        setSuggestions([]);
+      }
+    } catch (error) {
+      console.error('Error fetching suggestions:', error);
+    } finally {
+      setIsFetching(false); // Reset loading state
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const inputValue = e.target.value;
+    setDestination(inputValue);
+    
+    if (inputValue.length > lastInputLength + 2) {
+      fetchSuggestions(inputValue);
+    } else if (inputValue.length <= 2) {
+      setSuggestions([]); // Clear suggestions if input is too short
+    }
+
+    // Update the last input length
+    setLastInputLength(inputValue.length);
+  };
+
+  const handleSuggestionClick = (suggestion) => {
+    setDestination(suggestion.description); // Set the selected suggestion
+    setSuggestions([]); // Clear suggestions after selection
+  };
   return (
+    
     <div className="sm:px-10 md:px-32 lg:px-48 xl:px-56 px-5 mt-10 text-center bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
       <h2 className="font-extrabold text-4xl text-gray-800 tracking-tight mb-4">Tell Us Your Travel Preference</h2>
       <p className="mt-3 text-gray-600 text-lg lg:text-xl max-w-2xl mx-auto">
         Select your travel style, pace, and budget to get a trip that matches your vibe. <br />
         Discover unique destinations, popular sights, and hidden gems for an exciting adventure.
       </p>
-
-      <div className="mt-16 space-y-12">
+       <div className="mt-16 space-y-12">
         {/* Destination Input */}
-        <div className="bg-white rounded-lg shadow-lg p-6 md:p-8 transition hover:shadow-xl">
+        <div className="relative bg-white rounded-lg shadow-lg p-6 md:p-8 transition hover:shadow-xl">
           <h2 className="text-2xl font-semibold text-gray-700 mb-2">What is your destination?</h2>
-          <ReactGoogleAutocomplete
-            apiKey='' // Leave blank for now
+          <input
+            type="text"
+            value={destination}
+            onChange={handleInputChange}
             placeholder='Enter your destination'
             className="border border-gray-300 rounded-lg p-3 w-full h-14 text-lg text-gray-700 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary transition"
-          /> 
+          />
+      {isFetching ? (
+            <div className="mt-2 text-gray-500">Loading...</div> // Display loading state
+          ) : (
+            suggestions.length > 0 && (
+              <div className="mt-2 relative rounded-lg text-lg focus:ring-2">
+                {suggestions.map((suggestion, index) => (
+                  <div
+                    key={index}
+                    onClick={() => handleSuggestionClick(suggestion)}
+                    className="p-3 cursor-pointer hover:bg-gray-200"
+                  >
+                    {suggestion.description} {/* Display the suggestion description */}
+                  </div>
+                ))}
+              </div>
+            )
+          )}
         </div>
-
         {/* Days of Stay Input */}
         <div className="bg-white rounded-lg shadow-lg p-6 md:p-8 transition hover:shadow-xl">
           <h2 className="text-2xl font-semibold text-gray-700 mb-2">How many days are you planning to stay?</h2>
