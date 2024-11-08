@@ -44,14 +44,11 @@ function Createtrip() {
     const inputValue = e.target.value;
     setDestination(inputValue);
     
-    if (inputValue.length > lastInputLength + 2) {
-      fetchSuggestions(inputValue);
-    } else if (inputValue.length <= 2) {
-      setSuggestions([]); // Clear suggestions if input is too short
-    }
-
-    // Update the last input length
-    setLastInputLength(inputValue.length);
+    if (inputValue.length >=3 && inputValue.length % 3 === 0) {
+    fetchSuggestions(inputValue); // Call API every three characters 
+  } else if (inputValue.length <= 2) {
+    setSuggestions([]); // Clear suggestions if input is too short
+  }
   };
 
   const handleSuggestionClick = (suggestion) => {
@@ -81,7 +78,7 @@ function Createtrip() {
             <div className="mt-2 text-gray-500">Loading...</div> // Display loading state
           ) : (
             suggestions.length > 0 && (
-              <div className="mt-2 relative rounded-lg text-lg focus:ring-2">
+              <div className="mt-2 relative rounded-lg text-lg focus:ring-2 border border-gray-300  text-left pl-2">
                 {suggestions.map((suggestion, index) => (
                   <div
                     key={index}
